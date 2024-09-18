@@ -1,0 +1,54 @@
+services:
+  storage:
+    image: redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - ./data:/data
+
+  counter:
+    build: counter
+    ports:
+      - "3002:3001"
+    environment:
+      - PORT=3001
+      - STORAGE_URL=redis://storage:6379
+
+  book:
+    build: book
+    ports:
+      - "80:3000"
+    environment:
+      - COUNTER_URL=http://counter:3001
+      - PORT=3000
+
+  mongo:
+    image: mongo
+    restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: example
+    volumes:
+      - mongo-data:/data/db
+    ports:
+      - "27017:27017"
+
+  mongo-express:
+    image: mongo-express
+    restart: always
+    ports:
+      - "8081:8081"
+    env_file: 
+      - .env 
+    environment:
+      ME_CONFIG_MONGODB_SERVER: ${MONGO_URI}
+      ME_CONFIG_MONGODB_PORT: 27017
+      ME_CONFIG_MONGODB_AUTH_DATABASE: admin
+      ME_CONFIG_MONGODB_AUTH_USERNAME: ${USERNAME}
+      ME_CONFIG_MONGODB_AUTH_PASSWORD: ${PASSWORD}
+      ME_CONFIG_BASICAUTH_USERNAME: admin
+      ME_CONFIG_BASICAUTH_PASSWORD: your_password
+
+volumes:
+  data:
+  mongo-data:
